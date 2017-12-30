@@ -36,8 +36,8 @@
 ;; the shell. Let's fix that:
 (prelude-require-packages '(exec-path-from-shell vkill))
 
-(require 'exec-path-from-shell)
-(exec-path-from-shell-initialize)
+;;(require 'exec-path-from-shell)
+;;(exec-path-from-shell-initialize)
 
 ;; It's all in the Meta
 (setq ns-function-modifier 'hyper)
