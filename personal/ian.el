@@ -53,6 +53,8 @@
 (setq etags-table-search-up-depth 10)
 (add-hook 'helm-etags-plus-select-hook 'etags-table-recompute)
 
+(setq ctags-update-command "/usr/local/bin/ctags")
+
 ;; keybindings
 (global-set-key (kbd "C-c C-d d") 'dash-at-point)
 (global-set-key (kbd "C-c C-d e") 'dash-at-point-with-docset)
