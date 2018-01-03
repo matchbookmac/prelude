@@ -53,6 +53,7 @@
 (setq etags-table-search-up-depth 10)
 (add-hook 'helm-etags-plus-select-hook 'etags-table-recompute)
 
+(require 'ctags-update)
 (setq ctags-update-command "/usr/local/bin/ctags")
 
 ;; keybindings
