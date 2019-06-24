@@ -75,7 +75,6 @@
 ;; run terraform fmt before save
 (add-hook 'terraform-mode-hook #'terraform-format-on-save-mode)
 
-
 ;; keybindings
 (global-set-key (kbd "C-c C-d d") 'dash-at-point)
 (global-set-key (kbd "C-c C-d e") 'dash-at-point-with-docset)
