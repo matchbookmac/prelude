@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: psysh for php
+# key: psy
+# --
+eval(\Psy\sh());
