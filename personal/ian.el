@@ -13,11 +13,38 @@
                             nlinum
                             yasnippet
                             markdown-mode
-                            etags-table
                             ctags-update
                             helm-etags-plus
                             terraform-mode
                             dotenv-mode))
+
+;; (require 'el-get)
+;; ;; Set el-get sources
+;; (setq
+;;  el-get-sources
+;;  '(
+;;    (:name etags-table
+;;           :type emacswiki
+;;           :features etags-table
+;;           :after (progn ()
+;;                    (setq etags-table-search-up-depth 10)
+;;                    (setq etags-table-alist
+;;                          (list
+;;                           '("~/code/.*\\.\\([rb]\\)" "~/code/*/TAGS")
+;;                           ))))
+;;    ))
+
+;; ;; now set our own packages
+;; (setq
+;;  my:el-get-packages
+;;  '())
+
+;; (setq my:el-get-packages
+;;       (append my:el-get-packages
+;;               (mapcar #'el-get-source-name el-get-sources)))
+
+;; ;; install new packages and init already installed packages
+;; (el-get 'sync my:el-get-packages)
 
 ;; for optionally supporting additional file extensions such as `.env.test' with this major mode
 (add-to-list 'auto-mode-alist '("\\.env\\..*\\'" . dotenv-mode))
@@ -50,13 +77,13 @@
 ;; No region when it is not highlighted
 (transient-mark-mode 1)
 
-(require 'etags-table)
-(setq etags-table-alist
-      (list
-       '("~/code/.*\\.\\([rb]\\)" "~/code/*/TAGS")
-       ))
-(setq etags-table-search-up-depth 10)
-(add-hook 'helm-etags-plus-select-hook 'etags-table-recompute)
+;; (require 'etags-table)
+;; (setq etags-table-alist
+;;       (list
+;;        '("~/code/.*\\.\\([rb]\\)" "~/code/*/TAGS")
+;;        ))
+;; (setq etags-table-search-up-depth 10)
+;; (add-hook 'helm-etags-plus-select-hook 'etags-table-recompute)
 
 (require 'ctags-update)
 (setq ctags-update-command "/usr/local/bin/ctags")
