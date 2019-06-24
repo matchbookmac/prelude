@@ -15,7 +15,12 @@
                             markdown-mode
                             etags-table
                             ctags-update
-                            helm-etags-plus))
+                            helm-etags-plus
+                            terraform-mode
+                            dotenv-mode))
+
+;; for optionally supporting additional file extensions such as `.env.test' with this major mode
+(add-to-list 'auto-mode-alist '("\\.env\\..*\\'" . dotenv-mode))
 
 ;; disable Emacs menubar
 (menu-bar-mode -1)
@@ -55,6 +60,21 @@
 
 (require 'ctags-update)
 (setq ctags-update-command "/usr/local/bin/ctags")
+
+;; disable tabs whitespace in golang buffers
+(add-hook 'go-mode-hook
+          (lambda ()
+            (add-hook 'before-save-hook 'gofmt-before-save)
+            (setq whitespace-style '(face empty trailing lines-tail))
+            (setq tab-width 4)
+            (setq indent-tabs-mode 1)))
+
+;; run gofmt before save
+(add-hook 'before-save-hook #'gofmt-before-save)
+
+;; run terraform fmt before save
+(add-hook 'terraform-mode-hook #'terraform-format-on-save-mode)
+
 
 ;; keybindings
 (global-set-key (kbd "C-c C-d d") 'dash-at-point)
