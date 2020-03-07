@@ -5,6 +5,10 @@
 ;; Prelude offers personal customization via the personal/ dir.
 
 ;;; Code:
+;; Add marmalade (buyer beware)
+(add-to-list 'package-archives
+             '("marmalade" . "http://marmalade-repo.org/packages/") t)
+
 ;; require extra pacakages outside of prelude
 (prelude-require-packages '(dash-at-point
                             ag
@@ -14,6 +18,7 @@
                             yasnippet
                             markdown-mode
                             ctags-update
+                            etags-table
                             helm-etags-plus
                             terraform-mode
                             dotenv-mode))
@@ -52,10 +57,9 @@
 ;; disable Emacs menubar
 (menu-bar-mode -1)
 
-;; Turn on yas snippets
-(yas-global-mode)
-
 (custom-set-variables
+ ;; set yas snippet location to follow symlinks
+ '(yas-snippet-dirs (list (file-truename "~/.emacs.d/snippets")))
  ;; use guru mode to disable noob keys
  '(guru-warn-only nil)
  ;; use sbcl for Common Lisp
@@ -71,19 +75,22 @@
  '(org-agenda-files (list "~/Dropbox/org/work.org"
                           "~/Dropbox/org/home.org")))
 
+;; Turn on yas snippets
+(yas-global-mode)
+
 ;; cua-mode https://www.emacswiki.org/emacs/CuaMode
 (cua-mode t)
 (cua-selection-mode t)
 ;; No region when it is not highlighted
 (transient-mark-mode 1)
 
-;; (require 'etags-table)
-;; (setq etags-table-alist
-;;       (list
-;;        '("~/code/.*\\.\\([rb]\\)" "~/code/*/TAGS")
-;;        ))
-;; (setq etags-table-search-up-depth 10)
-;; (add-hook 'helm-etags-plus-select-hook 'etags-table-recompute)
+(require 'etags-table)
+(setq etags-table-alist
+      (list
+       '("~/code/.*\\.\\([rb]\\)" "~/code/*/TAGS")
+       ))
+(setq etags-table-search-up-depth 10)
+(add-hook 'helm-etags-plus-select-hook 'etags-table-recompute)
 
 (require 'ctags-update)
 (setq ctags-update-command "/usr/local/bin/ctags")
@@ -106,6 +113,10 @@
 (global-set-key (kbd "C-c C-d d") 'dash-at-point)
 (global-set-key (kbd "C-c C-d e") 'dash-at-point-with-docset)
 (global-set-key (kbd "M-g g") 'goto-line)
+;; Unset ace-window, it's not helpful with more than one window (tmux)
+(global-set-key [remap other-window] nil)
+(global-unset-key (kbd "C-x o"))
+(global-set-key (kbd "C-x o") 'other-window)
 
 ;; Show line numbers when using goto-line
 (global-set-key [remap goto-line] 'goto-line-with-feedback)
