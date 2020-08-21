@@ -10,18 +10,20 @@
              '("marmalade" . "http://marmalade-repo.org/packages/") t)
 
 ;; require extra pacakages outside of prelude
-(prelude-require-packages '(dash-at-point
-                            ag
-                            fzf
-                            flycheck
-                            nlinum
-                            yasnippet
-                            markdown-mode
+(prelude-require-packages '(ag
                             ctags-update
+                            dash-at-point
+                            dotenv-mode
+                            editorconfig
                             etags-table
+                            flycheck
+                            fzf
                             helm-etags-plus
+                            markdown-mode
+                            nlinum
+                            string-inflection
                             terraform-mode
-                            dotenv-mode))
+                            yasnippet))
 
 ;; (require 'el-get)
 ;; ;; Set el-get sources
@@ -72,8 +74,12 @@
  '(cua-auto-tabify-rectangles nil)
  ;; limit line length
  '(whitespace-line-column 120)
+ '(dired-listing-switches "-ahl --group-directories-first")
  '(org-agenda-files (list "~/Dropbox/org/work.org"
                           "~/Dropbox/org/home.org")))
+
+;; Turn on editorconfig
+(editorconfig-mode 1)
 
 ;; Turn on yas snippets
 (yas-global-mode)
@@ -96,15 +102,18 @@
 (setq ctags-update-command "/usr/local/bin/ctags")
 
 ;; disable tabs whitespace in golang buffers
-(add-hook 'go-mode-hook
-          (lambda ()
-            (add-hook 'before-save-hook 'gofmt-before-save)
-            (setq whitespace-style '(face empty trailing lines-tail))
-            (setq tab-width 4)
-            (setq indent-tabs-mode 1)))
+;; (add-hook 'go-mode-hook
+;;           (lambda ()
+;;             (add-hook 'before-save-hook 'gofmt-before-save)
+;;             (setq whitespace-style '(face empty trailing lines-tail))
+;;             (setq tab-width 4)
+;;             (setq indent-tabs-mode 1)))
 
-;; run gofmt before save
-(add-hook 'before-save-hook #'gofmt-before-save)
+;; ;; run gofmt before save
+;; (add-hook 'before-save-hook #'gofmt-before-save)
+
+;; disable go-vet checker because it uses outdated syntax
+(setq-default flycheck-disabled-checkers '(go-vet))
 
 ;; run terraform fmt before save
 (add-hook 'terraform-mode-hook #'terraform-format-on-save-mode)
@@ -148,6 +157,15 @@
 
 (define-key dired-mode-map
   (vector 'remap 'end-of-buffer) 'dired-jump-to-bottom)
+
+(defun reverse-words (beg end)
+  "Reverse the order of words in region."
+  (interactive "*r")
+  (apply
+   'insert
+   (reverse
+    (split-string
+     (delete-and-extract-region beg end) "\\b"))))
 
 (add-to-list 'auto-mode-alist '("/bash" . sh-mode))
 (add-to-list 'auto-mode-alist '("\\.sh" . sh-mode))

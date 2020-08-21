@@ -1,5 +1,7 @@
 (add-to-list 'package-archives
              '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+(add-to-list 'package-archives
+             '("melpa" . "https://melpa.org/packages/") t)
 
 (setq package-pinned-packages
       '(
@@ -47,7 +49,7 @@
         (feature-mode . "melpa-stable")
         (flx . "melpa-stable")
         (flx-ido . "melpa-stable")
-        (flycheck . "melpa-stable")
+        (flycheck . "melpa")
         (flycheck-ocaml . "melpa-stable")
         (geiser . "melpa-stable")
         (gh . "melpa-stable")
@@ -59,7 +61,7 @@
         (go-eldoc . "melpa-stable")
         (go-guru . "melpa-stable")
         (go-mode . "melpa-stable")
-        (go-projectile . "melpa-stable")
+        (go-projectile . "melpa")
         (go-rename . "melpa-stable")
         (gotest . "melpa-stable")
         (goto-chg . "melpa-stable")
