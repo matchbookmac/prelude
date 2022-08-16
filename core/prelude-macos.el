@@ -35,6 +35,7 @@
 (prelude-require-packages '(exec-path-from-shell))
 
 (require 'exec-path-from-shell)
+(setq exec-path-from-shell-arguments '())
 (exec-path-from-shell-initialize)
 
 ;; It's all in the Meta

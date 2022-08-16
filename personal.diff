@@ -1,0 +1,777 @@
+diff --git a/core/prelude-macos.el b/core/prelude-macos.el
+index aae18287ac..d05d0c715c 100644
+--- a/core/prelude-macos.el
++++ b/core/prelude-macos.el
+@@ -35,6 +35,7 @@
+ (prelude-require-packages '(exec-path-from-shell))
+ 
+ (require 'exec-path-from-shell)
++(setq exec-path-from-shell-arguments '())
+ (exec-path-from-shell-initialize)
+ 
+ ;; It's all in the Meta
+diff --git a/personal/comments.el b/personal/comments.el
+new file mode 100644
+index 0000000000..637086f947
+--- /dev/null
++++ b/personal/comments.el
+@@ -0,0 +1,19 @@
++;;; package -- comment or uncomment line
++
++;;; Commentary:
++;;; Comment, uncomment lines according to mode
++
++;;; Code:
++(defun ian/comment-or-uncomment-region-or-line ()
++  "Comments or uncomments the region or the current line with no active region."
++  (interactive)
++  (let ((beginning
++         (if (region-active-p) (region-beginning) (line-beginning-position)))
++        (end
++         (if (region-active-p) (region-end) (line-end-position))))
++    (comment-or-uncomment-region beginning end)))
++
++(global-set-key (kbd "C-c ;") 'ian/comment-or-uncomment-region-or-line)
++
++(provide 'comments)
++;;; comments.el ends here
+diff --git a/personal/ian.el b/personal/ian.el
+new file mode 100644
+index 0000000000..2f771a6945
+--- /dev/null
++++ b/personal/ian.el
+@@ -0,0 +1,174 @@
++;;; package --- Summary
++;; Personal config for Emacs, integrating with Prelude.
++
++;;; Commentary:
++;; Prelude offers personal customization via the personal/ dir.
++
++;;; Code:
++;; Add marmalade (buyer beware)
++(add-to-list 'package-archives
++             '("marmalade" . "http://marmalade-repo.org/packages/") t)
++
++;; require extra pacakages outside of prelude
++(prelude-require-packages '(ag
++                            ctags-update
++                            dash-at-point
++                            dotenv-mode
++                            editorconfig
++                            etags-table
++                            flycheck
++                            fzf
++                            helm-etags-plus
++                            markdown-mode
++                            nlinum
++                            string-inflection
++                            terraform-mode
++                            yasnippet))
++
++;; (require 'el-get)
++;; ;; Set el-get sources
++;; (setq
++;;  el-get-sources
++;;  '(
++;;    (:name etags-table
++;;           :type emacswiki
++;;           :features etags-table
++;;           :after (progn ()
++;;                    (setq etags-table-search-up-depth 10)
++;;                    (setq etags-table-alist
++;;                          (list
++;;                           '("~/code/.*\\.\\([rb]\\)" "~/code/*/TAGS")
++;;                           ))))
++;;    ))
++
++;; ;; now set our own packages
++;; (setq
++;;  my:el-get-packages
++;;  '())
++
++;; (setq my:el-get-packages
++;;       (append my:el-get-packages
++;;               (mapcar #'el-get-source-name el-get-sources)))
++
++;; ;; install new packages and init already installed packages
++;; (el-get 'sync my:el-get-packages)
++
++;; for optionally supporting additional file extensions such as `.env.test' with this major mode
++(add-to-list 'auto-mode-alist '("\\.env\\..*\\'" . dotenv-mode))
++
++;; disable Emacs menubar
++(menu-bar-mode -1)
++
++(custom-set-variables
++ ;; set yas snippet location to follow symlinks
++ '(yas-snippet-dirs (list (file-truename "~/.emacs.d/snippets")))
++ ;; use guru mode to disable noob keys
++ '(guru-warn-only nil)
++ ;; use sbcl for Common Lisp
++ '(inferior-lisp-program "sbcl")
++ ;; JavaScript 2 spaces for tab
++ '(js2-basic-offset 2)
++ ;; Line numbers, add space after
++ '(nlinum-format "%d ")
++ ;; Don't tabify after rectangle commands
++ '(cua-auto-tabify-rectangles nil)
++ ;; limit line length
++ '(whitespace-line-column 120)
++ '(dired-listing-switches "-ahl --group-directories-first")
++ '(org-agenda-files (list "~/Dropbox/org/work.org"
++                          "~/Dropbox/org/home.org")))
++
++;; Turn on editorconfig
++(editorconfig-mode 1)
++
++;; Turn on yas snippets
++(yas-global-mode)
++
++;; cua-mode https://www.emacswiki.org/emacs/CuaMode
++(cua-mode t)
++(cua-selection-mode t)
++;; No region when it is not highlighted
++(transient-mark-mode 1)
++
++(require 'etags-table)
++(setq etags-table-alist
++      (list
++       '("~/code/.*\\.\\([rb]\\)" "~/code/*/TAGS")
++       ))
++(setq etags-table-search-up-depth 10)
++(add-hook 'helm-etags-plus-select-hook 'etags-table-recompute)
++
++(require 'ctags-update)
++(setq ctags-update-command "/usr/local/bin/ctags")
++
++;; disable tabs whitespace in golang buffers
++;; (add-hook 'go-mode-hook
++;;           (lambda ()
++;;             (add-hook 'before-save-hook 'gofmt-before-save)
++;;             (setq whitespace-style '(face empty trailing lines-tail))
++;;             (setq tab-width 4)
++;;             (setq indent-tabs-mode 1)))
++
++;; ;; run gofmt before save
++;; (add-hook 'before-save-hook #'gofmt-before-save)
++
++;; disable go-vet checker because it uses outdated syntax
++(setq-default flycheck-disabled-checkers '(go-vet))
++
++;; run terraform fmt before save
++(add-hook 'terraform-mode-hook #'terraform-format-on-save-mode)
++
++;; keybindings
++(global-set-key (kbd "C-c C-d d") 'dash-at-point)
++(global-set-key (kbd "C-c C-d e") 'dash-at-point-with-docset)
++(global-set-key (kbd "M-g g") 'goto-line)
++;; Unset ace-window, it's not helpful with more than one window (tmux)
++(global-set-key [remap other-window] nil)
++(global-unset-key (kbd "C-x o"))
++(global-set-key (kbd "C-x o") 'other-window)
++
++;; Show line numbers when using goto-line
++(global-set-key [remap goto-line] 'goto-line-with-feedback)
++
++(defun goto-line-with-feedback ()
++  "Show line numbers temporarily, while prompting for the line number input."
++  (interactive)
++  (unwind-protect
++      (progn
++        (nlinum-mode 1)
++        (goto-line (read-number "Goto line: ")))
++    (nlinum-mode -1)))
++
++;; In dired, M-> and M- never take me where I want to go.
++;; That is, now they do.
++;; Instead of taking me to the very beginning or very end, they now take me to the first or last file.
++(defun dired-back-to-top ()
++  (interactive)
++  (beginning-of-buffer)
++  (dired-next-line 4))
++
++(define-key dired-mode-map
++  (vector 'remap 'beginning-of-buffer) 'dired-back-to-top)
++
++(defun dired-jump-to-bottom ()
++  (interactive)
++  (end-of-buffer)
++  (dired-next-line -1))
++
++(define-key dired-mode-map
++  (vector 'remap 'end-of-buffer) 'dired-jump-to-bottom)
++
++(defun reverse-words (beg end)
++  "Reverse the order of words in region."
++  (interactive "*r")
++  (apply
++   'insert
++   (reverse
++    (split-string
++     (delete-and-extract-region beg end) "\\b"))))
++
++(add-to-list 'auto-mode-alist '("/bash" . sh-mode))
++(add-to-list 'auto-mode-alist '("\\.sh" . sh-mode))
++
++(provide 'ian)
++;;; ian.el ends here
+diff --git a/personal/osx.el b/personal/osx.el
+new file mode 100644
+index 0000000000..85b6d81b73
+--- /dev/null
++++ b/personal/osx.el
+@@ -0,0 +1,23 @@
++;;; package --- Summary
++;; Configure emacs to itegrate with OSX.
++
++;;; Commentary:
++;; Kill ring and OSX clipboard don't play nice.  Make them work together.
++
++;;; Code:
++(defun copy-from-osx ()
++  "Use OSX clipboard to paste."
++  (shell-command-to-string "reattach-to-user-namespace pbpaste"))
++
++(defun paste-to-osx (text &optional push)
++  "Add kill ring entries (TEXT) to OSX clipboard.  PUSH."
++  (let ((process-connection-type nil))
++    (let ((proc (start-process "pbcopy" "*Messages*" "reattach-to-user-namespace" "pbcopy")))
++      (process-send-string proc text)
++      (process-send-eof proc))))
++
++(setq interprogram-cut-function 'paste-to-osx)
++(setq interprogram-paste-function 'copy-from-osx)
++
++(provide 'osx)
++;;; osx.el ends here
+diff --git a/personal/preload/certs.el b/personal/preload/certs.el
+new file mode 100644
+index 0000000000..d3e245c973
+--- /dev/null
++++ b/personal/preload/certs.el
+@@ -0,0 +1,13 @@
++;;; package --- Summary
++;; Personal config for Emacs, integrating with Prelude.
++
++;;; Commentary:
++;; Adjust the certificates so that melpa doesn't fail, being "insecure".
++
++;; Code:
++;; Add certs for melpa
++(require 'gnutls)
++(add-to-list 'gnutls-trustfiles "/usr/local/etc/openssl/cert.pem")
++
++(provide 'certs)
++;;; certs.el ends here
+diff --git a/personal/prelude-modules.el b/personal/prelude-modules.el
+new file mode 100644
+index 0000000000..52e3b3aa95
+--- /dev/null
++++ b/personal/prelude-modules.el
+@@ -0,0 +1,41 @@
++;;; Uncomment the modules you'd like to use and restart Prelude afterwards
++
++;; Emacs IRC client
++(require 'prelude-erc)
++;; (require 'prelude-ido) ;; Super charges Emacs completion for C-x C-f and more
++(require 'prelude-ivy) ;; A mighty modern alternative to ido
++(require 'prelude-helm) ;; Interface for narrowing and search
++(require 'prelude-helm-everywhere) ;; Enable Helm everywhere
++(require 'prelude-company)
++(require 'prelude-key-chord) ;; Binds useful features to key combinations
++;; (require 'prelude-mediawiki)
++;; (require 'prelude-evil)
++
++
++;;; Programming languages support
++(require 'prelude-c)
++;; (require 'prelude-clojure)
++(require 'prelude-coffee)
++(require 'prelude-common-lisp)
++(require 'prelude-css)
++(require 'prelude-emacs-lisp)
++;; (require 'prelude-erlang)
++;; (require 'prelude-elixir)
++(require 'prelude-go)
++;; (require 'prelude-haskell)
++(require 'prelude-js)
++;; (require 'prelude-latex)
++(require 'prelude-lisp)
++;; (require 'prelude-ocaml)
++(require 'prelude-org) ;; Org-mode helps you keep TODO lists, notes and more
++(require 'prelude-perl)
++(require 'prelude-python)
++(require 'prelude-ruby)
++;; (require 'prelude-rust)
++;; (require 'prelude-scala)
++;;(require 'prelude-scheme)
++(require 'prelude-shell)
++;; (require 'prelude-scss)
++;; (require 'prelude-web) ;; Emacs mode for web templates
++(require 'prelude-xml)
++(require 'prelude-yaml)
+diff --git a/personal/ruby-extract-method.el b/personal/ruby-extract-method.el
+new file mode 100644
+index 0000000000..c8df9caa1c
+--- /dev/null
++++ b/personal/ruby-extract-method.el
+@@ -0,0 +1,97 @@
++;;; package -- ruby-extract-method
++
++;;; Commentary:
++;;; Extract selection into method
++
++;;; Code:
++
++(require 'ruby-mode)
++
++(defgroup ian/ruby-refactor nil
++  "Refactoring helpers for Ruby."
++  :version "0.1"
++  :group 'files)
++
++(defcustom ian/ruby-refactor-keymap-prefix (kbd "C-c C-e")
++  "Ruby-refactor keymap prefix."
++  :group 'ian/ruby-refactor
++  :type 'sexp)
++
++(defvar ian/ruby-refactor-mode-map
++  (let ((map (make-sparse-keymap)))
++    (let ((prefix-map (make-sparse-keymap)))
++      (define-key prefix-map (kbd "e") 'ian/ruby-extract-method)
++      (define-key map ian/ruby-refactor-keymap-prefix prefix-map))
++    map)
++  "Keymap to use in ruby refactor minor mode.")
++
++(defun ian/trim-newline-endings (string)
++  "Trims newline off front and back of STRING."
++  (replace-regexp-in-string "\\(^\n\\|\n$\\)" "" string))
++
++(defun ian/ruby-new-method (method-name method-body)
++  "Create a new ruby method given a METHOD-NAME and METHOD-BODY."
++  (concat "def " method-name "\n  " method-body "\nend"))
++
++;;;###autoload
++(defun ian/ruby-extract-method ()
++  "Extracts selection into method."
++  (interactive)
++  (save-excursion
++    (save-restriction
++      (save-match-data
++        (widen)
++        (let* ((beginning
++                (if (region-active-p) (region-beginning) (line-beginning-position)))
++               (end
++                (if (region-active-p) (region-end) (line-end-position)))
++               (code-to-extract
++                (split-string (ian/trim-newline-endings (buffer-substring-no-properties beginning end)) " = "))
++               (extracted-method-name (car (last (split-string (pop code-to-extract)))))
++               (extracted-method (ian/ruby-new-method extracted-method-name (mapconcat 'identity code-to-extract " "))))
++          (delete-region beginning end)
++          (ruby-indent-line)
++          (insert (format "%s" extracted-method-name))
++          (cond ((search-forward-regexp "^\\s *private" nil "true")
++                 (progn
++                   (forward-line)
++                   (insert (format "\n%s\n" extracted-method))))
++                ((search-backward-regexp "^\\s *private" nil "true")
++                 (progn
++                   (forward-line)
++                   (insert (format "\n%s\n" extracted-method))))
++                ((progn
++                   (goto-char beginning)
++                   (search-forward-regexp "^\\s *def" nil "true"))
++                 (progn
++                   (forward-line 0)
++                   (insert (format "%s\n\n" extracted-method))))
++                ((progn
++                   (goto-char beginning)
++                   (search-backward-regexp "^\\s *def" nil "true"))
++                 (progn
++                   (insert (format "%s\n\n" extracted-method)))))
++          (search-backward-regexp "^\\s *def")
++          (indent-region (point)
++                         (progn
++                           (forward-paragraph)
++                           (point))))))))
++
++;;;###autoload
++(define-minor-mode ian/ruby-refactor-mode
++  "Ruby Refactor minor mode"
++  :global nil
++  :group 'ian/ruby-refactor
++  :keymap ian/ruby-refactor-mode-map
++  :lighter " Ian/RubyRef")
++
++;;;###autoload
++(defun ian/ruby-refactor-mode-launch ()
++  "Turn on `ruby-refactor-mode'."
++  (ian/ruby-refactor-mode 1))
++
++;;;###autoload
++(add-hook 'ruby-mode-hook 'ian/ruby-refactor-mode-launch)
++
++(provide 'ruby-extract-method)
++;;; ruby-extract-method.el ends here
+diff --git a/personal/ruby.el b/personal/ruby.el
+new file mode 100644
+index 0000000000..d4319357ae
+--- /dev/null
++++ b/personal/ruby.el
+@@ -0,0 +1,97 @@
++;;; package --- Summary
++;; Personal ruby config for Emacs
++
++;;; Commentary:
++
++;;; Code:
++;; require extra pacakages outside of prelude
++;; (prelude-require-packages '(bundler rspec-mode rvm))
++(prelude-require-packages '(emamux emamux-ruby-test))
++
++;; (global-set-key (kbd "C-c M-b o") 'bundle-open)
++;; (global-set-key (kbd "C-c M-b c") 'bundle-console)
++;; (global-set-key (kbd "C-c M-b i") 'bundle-install)
++;; (global-set-key (kbd "C-c M-b u") 'bundle-update)
++;; (global-set-key (kbd "C-c M-b e") 'bundle-exec)
++
++;; (rvm-use-default)
++
++;; (add-hook 'dired-mode-hook 'rspec-dired-mode)
++
++(require 'emamux)
++(require 'emamux-ruby-test)
++(add-hook 'ruby-mode-hook 'emamux-ruby-test-mode)
++
++(global-set-key (kbd "C-z") emamux:keymap)
++
++(custom-set-variables
++ '(emamux-ruby-test-keymap-prefix (kbd "C-c C-t")))
++
++(autoload 'turn-on-ctags-auto-update-mode "ctags-update" "turn on 'ctags-auto-update-mode'." t)
++(add-hook 'ruby-mode-hook  'turn-on-ctags-auto-update-mode)
++
++;; (defun ian-ruby-mode-defaults ()
++;;   "Turn of inf ruby and ruby tools."
++;;   (print "turn off defaults")
++;;   (inf-ruby-minor-mode -1)
++;;   (ruby-tools-mode -1))
++
++;; (setq ian-ruby-mode-hook 'ian-ruby-mode-defaults)
++
++;; (add-hook 'ruby-mode-hook (lambda ()
++;;                             (run-hooks 'ian-ruby-mode-hook)))
++;; (inf-ruby-minor-mode -1)
++;; (ruby-tools-mode -1)
++
++;; (defun prelude-ruby-mode-defaults ()
++;;   (inf-ruby-minor-mode -1)
++;;   (ruby-tools-mode -1)
++;;   ;; CamelCase aware editing operations
++;;   (subword-mode +1))
++
++;; (unload-feature 'inf-ruby)
++;; (unload-feature 'inf-ruby-minor-mode)
++
++;; (add-hook 'ruby-mode-hook (lambda ()
++;;                             (print "turn off defaults")
++;;                             (inf-ruby-minor-mode -1)
++;;                             (ruby-tools-mode -1)))
++
++
++;; (custom-set-variables
++;;  '(rspec-use-rvm t)
++;;  ;; who uses rake to run rspec. honestly
++;;  '(rspec-use-rake-when-possible nil)
++;;  ;;;;
++;;  ;; # When using rspec snippets:
++;;  ;;
++;;  ;; describe do
++;;  ;;   it "is awesome" { true }
++;;  ;; end
++;;  ;;
++;;  ;; # instead of
++;;  ;;
++;;  ;; RSpec.describe do
++;;  ;;  RSpec.before do
++;;  ;;    self.gag_with_four_fingers
++;;  ;;  end
++;;  ;;  RSpec.it "is so terrible why would you" { true }
++;;  ;; end
++;;  ;;
++;;  '(rspec-expose-dsl-globally t)
++;;  ;; Turn off utf-8 comment insertion in Ruby files
++;;  '(ruby-insert-encoding-magic-comment nil))
++
++;; (eval-after-load 'rspec-mode
++;;   '(rspec-install-snippets))
++
++;; Files that use ruby syntax
++(add-to-list 'auto-mode-alist '("\\ruby\\'" . ruby-mode))
++(add-to-list 'auto-mode-alist '("\\irbrc\\'" . ruby-mode))
++(add-to-list 'auto-mode-alist '("\\.irbrc\\'" . ruby-mode))
++(add-to-list 'auto-mode-alist '("\\.pryrc\\'" . ruby-mode))
++(add-to-list 'auto-mode-alist '("\\pryrc\\'" . ruby-mode))
++(add-to-list 'auto-mode-alist '("\\Brewfile\\'" . ruby-mode))
++
++(provide 'ruby)
++;;; ruby.el ends here
+diff --git a/personal/xml.el b/personal/xml.el
+new file mode 100644
+index 0000000000..77302422b2
+--- /dev/null
++++ b/personal/xml.el
+@@ -0,0 +1,13 @@
++;;; package --- Summary
++;; Set indent for xml documents
++
++;;; Commentary:
++;; The module prelude-xml.el sets the indet for xml docs.
++
++;;; Code:
++(custom-set-variables
++ '(nxml-child-indent 4)
++ '(nxml-attribute-indent 4))
++
++(provide 'xml)
++;;; xml.el ends here
+diff --git a/prelude-pinned-packages.el b/prelude-pinned-packages.el
+new file mode 100644
+index 0000000000..85be17b7dd
+--- /dev/null
++++ b/prelude-pinned-packages.el
+@@ -0,0 +1,135 @@
++(add-to-list 'package-archives
++             '("melpa-stable" . "https://stable.melpa.org/packages/") t)
++(add-to-list 'package-archives
++             '("melpa" . "https://melpa.org/packages/") t)
++
++(setq package-pinned-packages
++      '(
++        (ace-window . "melpa-stable")
++        (alchemist . "melpa-stable")
++        (anaconda-mode . "melpa-stable")
++        (anzu . "melpa-stable")
++        (async . "melpa-stable")
++        (avy . "melpa-stable")
++        (browse-kill-ring . "melpa-stable")
++        (caml . "melpa-stable")
++        (cask-mode . "melpa-stable")
++        (cdlatex . "melpa-stable")
++        (cider . "melpa-stable")
++        (clojure-mode . "melpa-stable")
++        (cmake-mode . "melpa-stable")
++        (coffee-mode . "melpa-stable")
++        (company . "melpa-stable")
++        (company-anaconda . "melpa-stable")
++        (company-auctex . "melpa-stable")
++        (company-go . "melpa-stable")
++        (crux . "melpa-stable")
++        (cython-mode . "melpa-stable")
++        (d-mode . "melpa-stable")
++        (dart-mode . "melpa-stable")
++        (dash . "melpa-stable")
++        (diff-hl . "melpa-stable")
++        (diminish . "melpa-stable")
++        (discover-my-major . "melpa-stable")
++        (dockerfile-mode . "melpa-stable")
++        (easy-kill . "melpa-stable")
++        (elisp-slime-nav . "melpa-stable")
++        (elixir-mode . "melpa-stable")
++        (elm-mode . "melpa-stable")
++        (ensime . "melpa-stable")
++        (epl . "melpa-stable")
++        (erlang . "melpa-stable")
++        (evil . "melpa-stable")
++        (evil-numbers . "melpa-stable")
++        (evil-surround . "melpa-stable")
++        (evil-visualstar . "melpa-stable")
++        (exec-path-from-shell . "melpa-stable")
++        (expand-region . "melpa-stable")
++        (f . "melpa-stable")
++        (feature-mode . "melpa-stable")
++        (flx . "melpa-stable")
++        (flx-ido . "melpa-stable")
++        (flycheck . "melpa")
++        (flycheck-ocaml . "melpa-stable")
++        (geiser . "melpa-stable")
++        (gh . "melpa-stable")
++        (gist . "melpa-stable")
++        (git-commit . "melpa-stable")
++        (git-timemachine . "melpa-stable")
++        (gitconfig-mode . "melpa-stable")
++        (gitignore-mode . "melpa-stable")
++        (go-eldoc . "melpa-stable")
++        (go-guru . "melpa-stable")
++        (go-mode . "melpa-stable")
++        (go-projectile . "melpa")
++        (go-rename . "melpa-stable")
++        (gotest . "melpa-stable")
++        (goto-chg . "melpa-stable")
++        (grizzl . "melpa-stable")
++        (groovy-mode . "melpa-stable")
++        (guru-mode . "melpa-stable")
++        (haml-mode . "melpa-stable")
++        (haskell-mode . "melpa-stable")
++        (helm . "melpa-stable")
++        (helm-ag . "melpa-stable")
++        (helm-core . "melpa-stable")
++        (helm-descbinds . "melpa-stable")
++        (helm-projectile . "melpa-stable")
++        (imenu-anywhere . "melpa-stable")
++        (inf-ruby . "melpa-stable")
++        (js2-mode . "melpa-stable")
++        (json-mode . "melpa-stable")
++        (json-reformat . "melpa-stable")
++        (json-snatcher . "melpa-stable")
++        (kivy-mode . "melpa-stable")
++        (less-css-mode . "melpa-stable")
++        (logito . "melpa-stable")
++        (lua-mode . "melpa-stable")
++        (macrostep . "melpa-stable")
++        (magit . "melpa-stable")
++        (magit-popup . "melpa-stable")
++        (makey . "melpa-stable")
++        (markdown-mode . "melpa-stable")
++        (marshal . "melpa-stable")
++        (mediawiki . "melpa-stable")
++        (merlin . "melpa-stable")
++        (operate-on-number . "melpa-stable")
++        (ov . "melpa-stable")
++        (pcache . "melpa-stable")
++        (php-mode . "melpa-stable")
++        (pkg-info . "melpa-stable")
++        (pkgbuild-mode . "melpa-stable")
++        (popup . "melpa-stable")
++        (projectile . "melpa-stable")
++        (protobuf-mode . "melpa-stable")
++        (puppet-mode . "melpa-stable")
++        (pythonic . "melpa-stable")
++        (queue . "gnu")
++        (rich-minority . "melpa-stable")
++        (ruby-tools . "melpa-stable")
++        (s . "melpa-stable")
++        (sass-mode . "melpa-stable")
++        (sbt-mode . "melpa-stable")
++        (scala-mode . "melpa-stable")
++        (scss-mode . "melpa-stable")
++        (slim-mode . "melpa-stable")
++        (slime . "melpa-stable")
++        (smart-mode-line . "melpa-stable")
++        (smartparens . "melpa-stable")
++        (smartrep . "melpa-stable")
++        (smex . "melpa-stable")
++        (spinner . "gnu")
++        (stylus-mode . "melpa-stable")
++        (swift-mode . "melpa-stable")
++        (thrift . "melpa-stable")
++        (tuareg . "melpa-stable")
++        (utop . "melpa-stable")
++        (volatile-highlights . "melpa-stable")
++        (web-mode . "melpa-stable")
++        (which-key . "melpa-stable")
++        (with-editor . "melpa-stable")
++        (yaml-mode . "melpa-stable")
++        (yasnippet . "melpa-stable")
++        (zenburn-theme . "melpa-stable")
++        (zop-to-char . "melpa-stable")
++        ))
+diff --git a/snippets/org-mode/.yas-compiled-snippets.el b/snippets/org-mode/.yas-compiled-snippets.el
+new file mode 100644
+index 0000000000..d665e6359a
+--- /dev/null
++++ b/snippets/org-mode/.yas-compiled-snippets.el
+@@ -0,0 +1,8 @@
++;;; Compiled snippets and support files for `org-mode'
++;;; Snippet definitions:
++;;;
++(yas-define-snippets 'org-mode
++                     '(("obsrc" "#+NAME: $2\n#+BEGIN_SRC $1\n$0\n#+END_SRC\n" "org mode src block" nil nil nil "/Users/imacdonald/code/dotfiles/tag-emacs/emacs.d/snippets/org-mode/obsrc" nil nil)))
++
++
++;;; Do not edit! File generated at Thu Jan 23 15:44:40 2020
+diff --git a/snippets/org-mode/obsrc b/snippets/org-mode/obsrc
+new file mode 100644
+index 0000000000..784bac33a4
+--- /dev/null
++++ b/snippets/org-mode/obsrc
+@@ -0,0 +1,8 @@
++# -*- mode: snippet -*-
++# name: org mode src block
++# key: obsrc
++# --
++#+NAME: $2
++#+BEGIN_SRC $1
++$0
++#+END_SRC
+diff --git a/snippets/php-mode/.yas-compiled-snippets.el b/snippets/php-mode/.yas-compiled-snippets.el
+new file mode 100644
+index 0000000000..968856a4f3
+--- /dev/null
++++ b/snippets/php-mode/.yas-compiled-snippets.el
+@@ -0,0 +1,8 @@
++;;; Compiled snippets and support files for `php-mode'
++;;; Snippet definitions:
++;;;
++(yas-define-snippets 'php-mode
++                     '(("psy" "eval(\\Psy\\sh());" "psysh for php" nil nil nil "/Users/imacdonald/code/dotfiles/tag-emacs/emacs.d/snippets/php-mode/psy" nil nil)))
++
++
++;;; Do not edit! File generated at Thu Jan 23 15:44:40 2020
+diff --git a/snippets/php-mode/psy b/snippets/php-mode/psy
+new file mode 100644
+index 0000000000..4c8b6f0a4c
+--- /dev/null
++++ b/snippets/php-mode/psy
+@@ -0,0 +1,5 @@
++# -*- mode: snippet -*-
++# name: psysh for php
++# key: psy
++# --
++eval(\Psy\sh());
+\ No newline at end of file
+diff --git a/snippets/python-mode/py.pry.el b/snippets/python-mode/py.pry.el
+new file mode 100644
+index 0000000000..1ca32df046
+--- /dev/null
++++ b/snippets/python-mode/py.pry.el
+@@ -0,0 +1,5 @@
++# -*- mode: snippet -*-
++# name: python pry
++# key: py.pry
++# --
++import code; code.interact(local=dict(globals(), **locals()))
+\ No newline at end of file
+diff --git a/snippets/ruby-mode/.yas-compiled-snippets.el b/snippets/ruby-mode/.yas-compiled-snippets.el
+new file mode 100644
+index 0000000000..8b3cab2970
+--- /dev/null
++++ b/snippets/ruby-mode/.yas-compiled-snippets.el
+@@ -0,0 +1,2 @@
++;;; Compiled snippets and support files for `ruby-mode'
++;;; Do not edit! File generated at Thu Jan 23 15:44:40 2020
+diff --git a/snippets/ruby-mode/binding.pry.el b/snippets/ruby-mode/binding.pry.el
+new file mode 100644
+index 0000000000..369a286806
+--- /dev/null
++++ b/snippets/ruby-mode/binding.pry.el
+@@ -0,0 +1,5 @@
++# -*- mode: snippet -*-
++# name: binding pry
++# key: pry
++# --
++binding.pry
+diff --git a/snippets/ruby-mode/fsl.el b/snippets/ruby-mode/fsl.el
+new file mode 100644
+index 0000000000..010433899e
+--- /dev/null
++++ b/snippets/ruby-mode/fsl.el
+@@ -0,0 +1,6 @@
++# -*- mode: snippet -*-
++# name: fsl
++# key: fsl
++# --
++
++# frozen_string_literal: true
+\ No newline at end of file
+ Login with GitHub
