@@ -5,18 +5,12 @@
 ;; Prelude offers personal customization via the personal/ dir.
 
 ;;; Code:
-;; Add marmalade (buyer beware)
-(add-to-list 'package-archives
-             '("marmalade" . "http://marmalade-repo.org/packages/") t)
 
 ;; require extra pacakages outside of prelude
-(prelude-require-packages '(ag
-                            ctags-update
+(prelude-require-packages '(ctags-update
                             dash-at-point
                             dotenv-mode
                             editorconfig
-                            etags-table
-                            flycheck
                             fzf
                             helm-etags-plus
                             markdown-mode
@@ -24,34 +18,6 @@
                             string-inflection
                             terraform-mode
                             yasnippet))
-
-;; (require 'el-get)
-;; ;; Set el-get sources
-;; (setq
-;;  el-get-sources
-;;  '(
-;;    (:name etags-table
-;;           :type emacswiki
-;;           :features etags-table
-;;           :after (progn ()
-;;                    (setq etags-table-search-up-depth 10)
-;;                    (setq etags-table-alist
-;;                          (list
-;;                           '("~/code/.*\\.\\([rb]\\)" "~/code/*/TAGS")
-;;                           ))))
-;;    ))
-
-;; ;; now set our own packages
-;; (setq
-;;  my:el-get-packages
-;;  '())
-
-;; (setq my:el-get-packages
-;;       (append my:el-get-packages
-;;               (mapcar #'el-get-source-name el-get-sources)))
-
-;; ;; install new packages and init already installed packages
-;; (el-get 'sync my:el-get-packages)
 
 ;; for optionally supporting additional file extensions such as `.env.test' with this major mode
 (add-to-list 'auto-mode-alist '("\\.env\\..*\\'" . dotenv-mode))
@@ -67,9 +33,7 @@
  ;; use sbcl for Common Lisp
  '(inferior-lisp-program "sbcl")
  ;; JavaScript 2 spaces for tab
- '(js2-basic-offset 2)
- ;; Line numbers, add space after
- '(nlinum-format "%d ")
+ ;; '(js2-basic-offset 2)
  ;; Don't tabify after rectangle commands
  '(cua-auto-tabify-rectangles nil)
  ;; limit line length
@@ -90,30 +54,18 @@
 ;; No region when it is not highlighted
 (transient-mark-mode 1)
 
-(require 'etags-table)
-(setq etags-table-alist
-      (list
-       '("~/code/.*\\.\\([rb]\\)" "~/code/*/TAGS")
-       ))
-(setq etags-table-search-up-depth 10)
-(add-hook 'helm-etags-plus-select-hook 'etags-table-recompute)
+;; (require 'etags-table)
+;; (setq etags-table-alist
+;;       (list
+;;        '("~/code/.*\\.\\([rb]\\)" "~/code/*/TAGS")
+;;        ))
+;; (setq etags-table-search-up-depth 10)
+;; (add-hook 'helm-etags-plus-select-hook 'etags-table-recompute)
 
 (require 'ctags-update)
 (setq ctags-update-command "/usr/local/bin/ctags")
-
-;; disable tabs whitespace in golang buffers
-;; (add-hook 'go-mode-hook
-;;           (lambda ()
-;;             (add-hook 'before-save-hook 'gofmt-before-save)
-;;             (setq whitespace-style '(face empty trailing lines-tail))
-;;             (setq tab-width 4)
-;;             (setq indent-tabs-mode 1)))
-
-;; ;; run gofmt before save
-;; (add-hook 'before-save-hook #'gofmt-before-save)
-
-;; disable go-vet checker because it uses outdated syntax
-(setq-default flycheck-disabled-checkers '(go-vet))
+(ctags-global-auto-update-mode)
+(setq tags-revert-without-query 1)
 
 ;; run terraform fmt before save
 (add-hook 'terraform-mode-hook #'terraform-format-on-save-mode)
@@ -126,18 +78,6 @@
 (global-set-key [remap other-window] nil)
 (global-unset-key (kbd "C-x o"))
 (global-set-key (kbd "C-x o") 'other-window)
-
-;; Show line numbers when using goto-line
-(global-set-key [remap goto-line] 'goto-line-with-feedback)
-
-(defun goto-line-with-feedback ()
-  "Show line numbers temporarily, while prompting for the line number input."
-  (interactive)
-  (unwind-protect
-      (progn
-        (nlinum-mode 1)
-        (goto-line (read-number "Goto line: ")))
-    (nlinum-mode -1)))
 
 ;; In dired, M-> and M- never take me where I want to go.
 ;; That is, now they do.
